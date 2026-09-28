@@ -1,0 +1,320 @@
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>لوحة التحكم | مستر توحيد</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div class="container">
+
+            <a href="index.html" class="logo">
+
+                <span class="logo-mark">MT</span>
+
+                <div class="logo-text">
+
+                    <strong>مستر توحيد</strong>
+
+                    <small>لوحة التحكم</small>
+
+                </div>
+
+            </a>
+
+
+            <nav class="nav">
+
+                <a href="index.html">
+                    المتجر
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- DASHBOARD -->
+
+    <main>
+
+        <section class="dashboard">
+
+            <div class="container">
+
+
+                <div class="section-heading">
+
+                    <span>
+                        إدارة المتجر
+                    </span>
+
+                    <h1>
+                        لوحة التحكم
+                    </h1>
+
+                    <p>
+                        إدارة الباكدجات والمنتجات والصور الموجودة في المتجر.
+                    </p>
+
+                </div>
+
+
+
+                <div class="dashboard-actions">
+
+                    <button type="button" class="btn" id="addPackageBtn">
+                        + إضافة باكدج
+                    </button>
+
+                </div>
+
+
+
+                <!-- PACKAGES -->
+
+                <div class="dashboard-packages" id="dashboardPackages">
+
+                    <!-- الباكدجات هتظهر هنا -->
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+
+        <div class="container">
+
+            <div class="copyright">
+
+                جميع الحقوق محفوظة © 2026 مستر توحيد
+
+            </div>
+
+        </div>
+
+    </footer>
+
+
+
+    <!-- ================= ADD / EDIT PACKAGE MODAL ================= -->
+
+    <div class="dashboard-modal" id="packageModal">
+
+        <div class="dashboard-modal-content">
+
+
+            <div class="dashboard-modal-header">
+
+                <h2 id="modalTitle">
+                    إضافة باكدج
+                </h2>
+
+
+                <button type="button" id="closePackageModal">
+                    ×
+                </button>
+
+            </div>
+
+
+
+            <form id="packageForm">
+
+
+                <!-- اسم الباكدج -->
+
+                <div class="form-group">
+
+                    <label for="packageName">
+                        اسم الباكدج
+                    </label>
+
+                    <input type="text" id="packageName" placeholder="مثال: باكدج 8 ألوان" required>
+
+                </div>
+
+
+
+                <!-- السعر -->
+
+                <div class="form-group">
+
+                    <label for="packagePrice">
+                        السعر
+                    </label>
+
+                    <input type="number" id="packagePrice" placeholder="مثال: 2500" required>
+
+                </div>
+
+
+
+                <!-- الصورة الرئيسية -->
+
+                <div class="form-group">
+
+                    <label for="packageImage">
+                        رابط الصورة الرئيسية
+                    </label>
+
+                    <input type="url" id="packageImage" placeholder="ضع رابط الصورة الرئيسية">
+
+                    <small>
+                        دي الصورة الكبيرة اللي هتظهر أول ما العميل يدخل تفاصيل الباكدج.
+                    </small>
+
+                </div>
+
+
+
+                <!-- الصور الفرعية -->
+
+                <div class="form-group">
+
+                    <label for="packageGallery">
+
+                        صور إضافية للباكدج
+
+                    </label>
+
+                    <textarea id="packageGallery" rows="5" placeholder="ضع كل رابط صورة في سطر منفصل
+
+مثال:
+https://example.com/image1.jpg
+https://example.com/image2.jpg
+https://example.com/image3.jpg"></textarea>
+
+                    <small>
+
+                        تقدر تضيف عدد صور كبير، كل صورة في سطر منفصل.
+
+                    </small>
+
+                </div>
+
+
+
+                <!-- وصف الباكدج -->
+
+                <div class="form-group">
+
+                    <label for="packageDescription">
+
+                        وصف الباكدج
+
+                    </label>
+
+                    <textarea id="packageDescription" rows="4" placeholder="اكتب وصف مختصر للباكدج..."
+                        required></textarea>
+
+                </div>
+
+
+
+                <!-- تفاصيل المنتجات -->
+
+                <div class="form-group">
+
+                    <label for="packageDetails">
+
+                        تفاصيل الباكدج
+
+                    </label>
+
+                    <textarea id="packageDetails" rows="7" placeholder="اكتب تفاصيل المنتجات الموجودة داخل الباكدج...
+
+مثال:
+
+• أمندرات حريمي
+• 8 ألوان
+• مقاسين
+• خامة قطن
+• مناسبة للاستخدام اليومي
+• الكمية حسب المتاح"></textarea>
+
+                </div>
+
+
+
+                <!-- المنتجات الموجودة داخل الباكدج -->
+
+                <div class="form-group">
+
+                    <label for="packageProducts">
+
+                        المنتجات الموجودة داخل الباكدج
+
+                    </label>
+
+                    <textarea id="packageProducts" rows="6" placeholder="اكتب كل منتج في سطر منفصل
+
+مثال:
+
+أمندرة حريمي - 8 ألوان - مقاسين
+تيشيرت حريمي - 5 ألوان - 3 مقاسات
+بنطلون حريمي - 4 ألوان - مقاسين"></textarea>
+
+                    <small>
+
+                        كل سطر يعتبر منتج منفصل داخل الباكدج.
+
+                    </small>
+
+                </div>
+
+
+
+                <!-- حفظ -->
+
+                <button type="submit" class="btn" id="savePackageBtn">
+
+                    حفظ الباكدج
+
+                </button>
+
+
+            </form>
+
+
+        </div>
+
+    </div>
+
+
+
+    <script type="module" src="main.js"></script>
+
+
+</body>
+
+</html>
+```
