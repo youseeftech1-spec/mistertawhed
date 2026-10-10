@@ -13,6 +13,13 @@ import {
 
 
 // ==================================================
+// GLOBAL
+// ==================================================
+
+const packagesCollection = collection(db, "packages");
+
+
+// ==================================================
 // MOBILE MENU
 // ==================================================
 
@@ -20,18 +27,14 @@ const menuButton = document.querySelector(".menu-btn");
 const nav = document.querySelector(".nav");
 
 if (menuButton && nav) {
-
-    menuButton.addEventListener("click", function () {
-
+    menuButton.addEventListener("click", () => {
         nav.classList.toggle("active");
-
     });
-
 }
 
 
 // ==================================================
-// GET PACKAGE ID
+// PACKAGE ID
 // ==================================================
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -39,176 +42,292 @@ const packageId = urlParams.get("id");
 
 
 // ==================================================
-// PRODUCT PAGE
+// STORE
 // ==================================================
 
-async function loadProductFromFirebase() {
+const packagesGrid = document.querySelector(".packages-grid");
 
-    const productName = document.querySelector("#productName");
 
-    if (!productName || !packageId) {
+async function loadStorePackages() {
+
+    if (!packagesGrid) {
         return;
     }
 
     try {
 
-        const packageRef = doc(
-            db,
-            "packages",
-            packageId
+        packagesGrid.innerHTML = `
+            <p class="loading-message">
+                جاري تحميل الباكدجات...
+            </p>
+        `;
+
+        const snapshot = await getDocs(packagesCollection);
+
+        console.log("عدد الباكدجات:", snapshot.size);
+
+        packagesGrid.innerHTML = "";
+
+        if (snapshot.empty) {
+
+            packagesGrid.innerHTML = `
+                <p class="empty-message">
+                    لا توجد باكدجات حاليًا.
+                </p>
+            `;
+
+            return;
+        }
+
+
+        snapshot.forEach((packageDocument) => {
+
+            const packageData = packageDocument.data();
+
+            const card = document.createElement("article");
+            card.className = "package-card";
+
+
+            // IMAGE
+            const imageBox = document.createElement("div");
+            imageBox.className = "package-image";
+
+            const image = document.createElement("img");
+
+            image.src =
+                packageData.image ||
+                "assets/images/package-1.jpg";
+
+            image.alt =
+                packageData.name || "باكدج";
+
+            image.loading = "lazy";
+
+            imageBox.appendChild(image);
+
+
+            // CONTENT
+            const content = document.createElement("div");
+            content.className = "package-content";
+
+
+            // NAME
+            const title = document.createElement("h3");
+
+            title.textContent =
+                packageData.name || "باكدج بدون اسم";
+
+
+            // DESCRIPTION
+            const description = document.createElement("p");
+
+            description.textContent =
+                packageData.description || "";
+
+
+            // BOTTOM
+            const bottom = document.createElement("div");
+            bottom.className = "package-bottom";
+
+
+            // PRICE
+            const price = document.createElement("strong");
+
+            price.textContent =
+                packageData.price
+                    ? `${packageData.price} جنيه`
+                    : "السعر غير محدد";
+
+
+            // DETAILS BUTTON
+            const detailsButton =
+                document.createElement("a");
+
+            detailsButton.href =
+                `product.html?id=${packageDocument.id}`;
+
+            detailsButton.className = "btn";
+
+            detailsButton.textContent =
+                "عرض التفاصيل";
+
+
+            bottom.appendChild(price);
+            bottom.appendChild(detailsButton);
+
+            content.appendChild(title);
+            content.appendChild(description);
+            content.appendChild(bottom);
+
+            card.appendChild(imageBox);
+            card.appendChild(content);
+
+            packagesGrid.appendChild(card);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "حدث خطأ أثناء تحميل الباكدجات:",
+            error
         );
 
-        const packageSnap = await getDoc(packageRef);
+        packagesGrid.innerHTML = `
+            <div class="error-message">
+                <p>
+                    حصل خطأ أثناء تحميل الباكدجات.
+                </p>
+
+                <small>
+                    افتح Console لمعرفة سبب المشكلة.
+                </small>
+            </div>
+        `;
+    }
+}
+
+
+// ==================================================
+// PRODUCT DETAILS PAGE
+// ==================================================
+
+async function loadProduct() {
+
+    const productName =
+        document.querySelector("#productName");
+
+    if (!productName || !packageId) {
+        return;
+    }
+
+
+    try {
+
+        const packageRef =
+            doc(db, "packages", packageId);
+
+        const packageSnap =
+            await getDoc(packageRef);
+
 
         if (!packageSnap.exists()) {
 
-            console.log("الباكدج غير موجودة في Firebase");
-            return;
+            console.error("الباكدج غير موجودة.");
 
+            return;
         }
 
-        const selectedPackage = packageSnap.data();
+
+        const packageData =
+            packageSnap.data();
 
 
-        // ==================================================
         // NAME
-        // ==================================================
-
-        const productNameElement =
+        const nameElement =
             document.querySelector("#productName");
 
-        if (productNameElement) {
-
-            productNameElement.textContent =
-                selectedPackage.name || "";
-
+        if (nameElement) {
+            nameElement.textContent =
+                packageData.name || "";
         }
 
 
-        // ==================================================
         // PRICE
-        // ==================================================
-
-        const productPrice =
+        const priceElement =
             document.querySelector("#productPrice");
 
-        if (productPrice) {
-
-            productPrice.textContent =
-                (selectedPackage.price || "") + " جنيه";
-
+        if (priceElement) {
+            priceElement.textContent =
+                packageData.price
+                    ? `${packageData.price} جنيه`
+                    : "";
         }
 
 
-        // ==================================================
         // DESCRIPTION
-        // ==================================================
-
-        const productDescription =
+        const descriptionElement =
             document.querySelector("#productDescription");
 
-        if (productDescription) {
-
-            productDescription.textContent =
-                selectedPackage.description || "";
-
+        if (descriptionElement) {
+            descriptionElement.textContent =
+                packageData.description || "";
         }
 
-        // ==================================================
-        // MAIN IMAGE + GALLERY
-        // ==================================================
 
+        // MAIN IMAGE
         const productImage =
             document.querySelector("#productImage");
 
-        const productGallery =
-            document.querySelector("#productGallery");
-
-
-        let mainImage =
-            selectedPackage.image ||
-            "assets/images/package-1.jpg";
-
-
-        let galleryImages =
-            Array.isArray(selectedPackage.gallery)
-                ? selectedPackage.gallery.filter(
-                    function (image) {
-                        return image && image.trim() !== "";
-                    }
-                )
-                : [];
-
-
-        // ==================================================
-        // MAIN IMAGE
-        // ==================================================
-
         if (productImage) {
 
-            productImage.src = mainImage;
+            productImage.src =
+                packageData.image ||
+                "assets/images/package-1.jpg";
 
             productImage.alt =
-                selectedPackage.name || "";
-
+                packageData.name || "";
         }
 
 
-        // ==================================================
         // GALLERY
-        // ==================================================
+        const productGallery =
+            document.querySelector("#productGallery");
 
         if (productGallery) {
 
             productGallery.innerHTML = "";
 
-
-            galleryImages.forEach(
-                function (imageUrl) {
-
-                    const thumbnail =
-                        document.createElement("img");
+            const gallery =
+                Array.isArray(packageData.gallery)
+                    ? packageData.gallery
+                    : [];
 
 
-                    thumbnail.src =
-                        imageUrl;
+            gallery.forEach((imageUrl) => {
 
-                    thumbnail.alt =
-                        selectedPackage.name || "";
-
-                    thumbnail.className =
-                        "product-gallery-image";
-
-
-                    // عند الضغط على الصورة الصغيرة
-                    thumbnail.addEventListener(
-                        "click",
-                        function () {
-
-                            if (productImage) {
-
-                                productImage.src =
-                                    imageUrl;
-
-                            }
-
-                        }
-                    );
-
-
-                    productGallery.appendChild(
-                        thumbnail
-                    );
-
+                if (!imageUrl) {
+                    return;
                 }
-            );
 
+
+                const thumbnail =
+                    document.createElement("img");
+
+                thumbnail.src =
+                    imageUrl;
+
+                thumbnail.alt =
+                    packageData.name || "";
+
+                thumbnail.className =
+                    "product-gallery-image";
+
+
+                thumbnail.addEventListener(
+                    "click",
+                    () => {
+
+                        if (productImage) {
+
+                            productImage.src =
+                                imageUrl;
+                        }
+
+                    }
+                );
+
+
+                productGallery.appendChild(
+                    thumbnail
+                );
+
+            });
         }
 
-        // ==================================================
-        // PRODUCTS INSIDE PACKAGE
-        // ==================================================
 
+        // PRODUCTS
         const productsList =
             document.querySelector(
                 "#packageProductsList"
@@ -219,47 +338,35 @@ async function loadProductFromFirebase() {
 
             productsList.innerHTML = "";
 
-
             const products =
-                Array.isArray(selectedPackage.products)
-                    ? selectedPackage.products
+                Array.isArray(packageData.products)
+                    ? packageData.products
                     : [];
 
 
-            products.forEach(
-                function (product) {
+            products.forEach((product) => {
 
-                    if (!product) {
-                        return;
-                    }
-
-
-                    const item =
-                        document.createElement("div");
-
-
-                    item.className =
-                        "package-product-item";
-
-
-                    item.textContent =
-                        product;
-
-
-                    productsList.appendChild(
-                        item
-                    );
-
+                if (!product) {
+                    return;
                 }
-            );
 
+
+                const item =
+                    document.createElement("div");
+
+                item.className =
+                    "package-product-item";
+
+                item.textContent =
+                    product;
+
+                productsList.appendChild(item);
+
+            });
         }
 
 
-        // ==================================================
-        // PACKAGE DETAILS
-        // ==================================================
-
+        // DETAILS
         const featuresList =
             document.querySelector(
                 "#productFeatures"
@@ -270,84 +377,57 @@ async function loadProductFromFirebase() {
 
             featuresList.innerHTML = "";
 
-
             const details =
-                selectedPackage.details || "";
+                packageData.details || "";
 
 
-            if (details) {
+            details
+                .split("\n")
+                .map(line => line.trim())
+                .filter(line => line !== "")
+                .forEach((detail) => {
 
-                const detailsLines =
-                    details
-                        .split("\n")
-                        .map(
-                            function (line) {
-                                return line.trim();
-                            }
-                        )
-                        .filter(
-                            function (line) {
-                                return line !== "";
-                            }
-                        );
+                    const li =
+                        document.createElement("li");
 
 
-                detailsLines.forEach(
-                    function (detail) {
-
-                        const li =
-                            document.createElement("li");
-
-
-                        li.textContent =
-                            detail.startsWith("•")
-                                ? "✓ " + detail.substring(1).trim()
-                                : "✓ " + detail;
+                    const cleanDetail =
+                        detail.startsWith("•")
+                            ? detail.substring(1).trim()
+                            : detail;
 
 
-                        featuresList.appendChild(
-                            li
-                        );
+                    li.textContent =
+                        `✓ ${cleanDetail}`;
 
-                    }
-                );
 
-            }
+                    featuresList.appendChild(li);
 
+                });
         }
 
 
-        // ==================================================
         // ORDER BUTTON
-        // ==================================================
-
         const orderButton =
-            document.querySelector(
-                "#orderButton"
-            );
+            document.querySelector("#orderButton");
 
 
         if (orderButton) {
 
             orderButton.href =
-                "order.html?id=" +
-                packageId;
-
+                `order.html?id=${packageId}`;
         }
+
 
     } catch (error) {
 
         console.error(
-            "Error loading product:",
+            "خطأ في تحميل تفاصيل الباكدج:",
             error
         );
 
     }
-
 }
-
-
-loadProductFromFirebase();
 
 
 // ==================================================
@@ -358,199 +438,152 @@ const orderForm =
     document.querySelector("#orderForm");
 
 
-if (orderForm) {
+let orderPackage = null;
 
 
-    let orderPackage = null;
+async function loadOrderPackage() {
+
+    if (!orderForm || !packageId) {
+        return;
+    }
 
 
-    // ==================================================
-    // LOAD ORDER PACKAGE
-    // ==================================================
+    try {
 
-    async function loadOrderPackage() {
+        const packageRef =
+            doc(db, "packages", packageId);
 
-        if (!packageId) {
+        const packageSnap =
+            await getDoc(packageRef);
 
-            console.log(
-                "لا يوجد Package ID في الرابط."
+
+        if (!packageSnap.exists()) {
+
+            console.error(
+                "الباكدج المطلوبة غير موجودة."
             );
 
             return;
-
         }
 
 
-        try {
-
-            const packageRef =
-                doc(
-                    db,
-                    "packages",
-                    packageId
-                );
+        orderPackage =
+            packageSnap.data();
 
 
-            const packageSnap =
-                await getDoc(
-                    packageRef
-                );
+        // IMAGE
+        const summaryImage =
+            document.querySelector("#summaryImage");
+
+        if (summaryImage) {
+
+            summaryImage.src =
+                orderPackage.image ||
+                "assets/images/package-1.jpg";
+
+            summaryImage.alt =
+                orderPackage.name || "";
+        }
 
 
-            if (!packageSnap.exists()) {
+        // NAME
+        const summaryName =
+            document.querySelector("#summaryName");
 
-                console.log(
-                    "الباكدج المطلوبة غير موجودة."
-                );
+        if (summaryName) {
 
-                return;
-
-            }
-
-
-            orderPackage =
-                packageSnap.data();
+            summaryName.textContent =
+                orderPackage.name || "";
+        }
 
 
-            // ==================================================
-            // IMAGE
-            // ==================================================
-
-            const summaryImage =
-                document.querySelector(
-                    "#summaryImage"
-                );
-
-
-            if (summaryImage) {
-
-                summaryImage.src =
-                    orderPackage.image ||
-                    "assets/images/package-1.jpg";
-
-                summaryImage.alt =
-                    orderPackage.name || "";
-
-            }
-
-
-            // ==================================================
-            // NAME
-            // ==================================================
-
-            const summaryName =
-                document.querySelector(
-                    "#summaryName"
-                );
-
-
-            if (summaryName) {
-
-                summaryName.textContent =
-                    orderPackage.name || "";
-
-            }
-
-
-            // ==================================================
-            // DESCRIPTION
-            // ==================================================
-
-            const summaryDescription =
-                document.querySelector(
-                    "#summaryDescription"
-                );
-
-
-            if (summaryDescription) {
-
-                summaryDescription.textContent =
-                    orderPackage.description || "";
-
-            }
-
-
-            // ==================================================
-            // PRICE
-            // ==================================================
-
-            const summaryPrice =
-                document.querySelector(
-                    "#summaryPrice"
-                );
-
-
-            if (summaryPrice) {
-
-                summaryPrice.textContent =
-                    (orderPackage.price || "") +
-                    " جنيه";
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Error loading order package:",
-                error
+        // DESCRIPTION
+        const summaryDescription =
+            document.querySelector(
+                "#summaryDescription"
             );
 
+        if (summaryDescription) {
+
+            summaryDescription.textContent =
+                orderPackage.description || "";
         }
 
-    }
 
+        // PRICE
+        const summaryPrice =
+            document.querySelector("#summaryPrice");
+
+        if (summaryPrice) {
+
+            summaryPrice.textContent =
+                orderPackage.price
+                    ? `${orderPackage.price} جنيه`
+                    : "";
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "خطأ في تحميل بيانات الطلب:",
+            error
+        );
+
+    }
+}
+
+
+if (orderForm) {
 
     loadOrderPackage();
 
 
-    // ==================================================
-    // SEND ORDER TO WHATSAPP
-    // ==================================================
-
     orderForm.addEventListener(
         "submit",
-        async function (event) {
+        (event) => {
 
             event.preventDefault();
 
 
-            // ==================================================
-            // CUSTOMER DATA
-            // ==================================================
+            if (!orderPackage) {
+
+                alert(
+                    "لم نتمكن من تحميل بيانات الباكدج."
+                );
+
+                return;
+            }
+
 
             const name =
-                document.querySelector(
-                    "#name"
-                ).value.trim();
+                document.querySelector("#name")
+                    ?.value
+                    .trim();
 
 
             const phone =
-                document.querySelector(
-                    "#phone"
-                ).value.trim();
+                document.querySelector("#phone")
+                    ?.value
+                    .trim();
 
 
             const governorate =
-                document.querySelector(
-                    "#governorate"
-                ).value;
+                document.querySelector("#governorate")
+                    ?.value;
 
 
             const address =
-                document.querySelector(
-                    "#address"
-                ).value.trim();
+                document.querySelector("#address")
+                    ?.value
+                    .trim();
 
 
             const notes =
-                document.querySelector(
-                    "#notes"
-                ).value.trim();
+                document.querySelector("#notes")
+                    ?.value
+                    .trim();
 
-
-            // ==================================================
-            // VALIDATION
-            // ==================================================
 
             if (
                 !name ||
@@ -564,46 +597,14 @@ if (orderForm) {
                 );
 
                 return;
-
             }
 
-
-            // ==================================================
-            // CHECK PACKAGE
-            // ==================================================
-
-            if (!orderPackage) {
-
-                alert(
-                    "لم نتمكن من تحميل بيانات الباكدج. حاول مرة أخرى."
-                );
-
-                return;
-
-            }
-
-
-            // ==================================================
-            // PACKAGE DATA
-            // ==================================================
-
-            const packageName =
-                orderPackage.name || "";
-
-
-            const packagePrice =
-                orderPackage.price || "";
-
-
-            // ==================================================
-            // WHATSAPP MESSAGE
-            // ==================================================
 
             const message =
                 `طلب جديد من موقع مستر توحيد
 
-الباكدج: ${packageName}
-السعر: ${packagePrice} جنيه
+الباكدج: ${orderPackage.name || ""}
+السعر: ${orderPackage.price || ""} جنيه
 
 اسم العميل: ${name}
 رقم الهاتف: ${phone}
@@ -612,24 +613,13 @@ if (orderForm) {
 ملاحظات: ${notes || "لا توجد"}`;
 
 
-            // ==================================================
-            // WHATSAPP NUMBER
-            // ==================================================
-
             const whatsappNumber =
                 "201515641899";
 
 
             const whatsappURL =
-                "https://wa.me/" +
-                whatsappNumber +
-                "?text=" +
-                encodeURIComponent(message);
+                `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-
-            // ==================================================
-            // OPEN WHATSAPP
-            // ==================================================
 
             window.open(
                 whatsappURL,
@@ -638,7 +628,6 @@ if (orderForm) {
 
         }
     );
-
 }
 
 
@@ -647,96 +636,60 @@ if (orderForm) {
 // ==================================================
 
 const addPackageBtn =
-    document.querySelector(
-        "#addPackageBtn"
-    );
-
+    document.querySelector("#addPackageBtn");
 
 const packageModal =
-    document.querySelector(
-        "#packageModal"
-    );
-
+    document.querySelector("#packageModal");
 
 const closePackageModal =
-    document.querySelector(
-        "#closePackageModal"
-    );
-
+    document.querySelector("#closePackageModal");
 
 const packageForm =
-    document.querySelector(
-        "#packageForm"
-    );
-
+    document.querySelector("#packageForm");
 
 const dashboardPackages =
-    document.querySelector(
-        "#dashboardPackages"
-    );
-
+    document.querySelector("#dashboardPackages");
 
 const modalTitle =
-    document.querySelector(
-        "#modalTitle"
-    );
-
+    document.querySelector("#modalTitle");
 
 const savePackageBtn =
-    document.querySelector(
-        "#savePackageBtn"
-    );
+    document.querySelector("#savePackageBtn");
 
 
 let editingPackageId = null;
 
 
 // ==================================================
-// OPEN ADD PACKAGE
+// OPEN ADD MODAL
 // ==================================================
 
-if (
-    addPackageBtn &&
-    packageModal
-) {
+if (addPackageBtn && packageModal) {
 
     addPackageBtn.addEventListener(
         "click",
-        function () {
+        () => {
 
             editingPackageId = null;
 
-
             if (modalTitle) {
-
                 modalTitle.textContent =
                     "إضافة باكدج";
-
             }
-
 
             if (savePackageBtn) {
-
                 savePackageBtn.textContent =
                     "حفظ الباكدج";
-
             }
-
 
             if (packageForm) {
-
                 packageForm.reset();
-
             }
 
-
-            packageModal.classList.add(
-                "active"
-            );
+            packageModal.classList.add("active");
 
         }
     );
-
 }
 
 
@@ -744,27 +697,21 @@ if (
 // CLOSE MODAL
 // ==================================================
 
-if (
-    closePackageModal &&
-    packageModal
-) {
+if (closePackageModal && packageModal) {
 
     closePackageModal.addEventListener(
         "click",
-        function () {
+        () => {
 
-            packageModal.classList.remove(
-                "active"
-            );
+            packageModal.classList.remove("active");
 
         }
     );
-
 }
 
 
 // ==================================================
-// LOAD DASHBOARD PACKAGES
+// LOAD DASHBOARD
 // ==================================================
 
 async function loadDashboardPackages() {
@@ -776,13 +723,13 @@ async function loadDashboardPackages() {
 
     try {
 
+        dashboardPackages.innerHTML = `
+            <p>جاري تحميل الباكدجات...</p>
+        `;
+
+
         const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "packages"
-                )
-            );
+            await getDocs(packagesCollection);
 
 
         dashboardPackages.innerHTML = "";
@@ -797,179 +744,118 @@ async function loadDashboardPackages() {
             `;
 
             return;
-
         }
 
 
-        snapshot.forEach(
-            function (packageDocument) {
+        snapshot.forEach((packageDocument) => {
 
-                const packageData =
-                    packageDocument.data();
+            const packageData =
+                packageDocument.data();
 
 
-                const card =
-                    document.createElement(
-                        "div"
-                    );
+            const card =
+                document.createElement("div");
 
+            card.className =
+                "dashboard-package-card";
 
-                card.className =
-                    "dashboard-package-card";
 
+            const info =
+                document.createElement("div");
 
-                const info =
-                    document.createElement(
-                        "div"
-                    );
+            info.className =
+                "dashboard-package-info";
 
 
-                info.className =
-                    "dashboard-package-info";
+            const title =
+                document.createElement("h3");
 
+            title.textContent =
+                packageData.name || "";
 
-                const title =
-                    document.createElement(
-                        "h3"
-                    );
 
+            const description =
+                document.createElement("p");
 
-                title.textContent =
-                    packageData.name || "";
+            description.textContent =
+                packageData.description || "";
 
 
-                const description =
-                    document.createElement(
-                        "p"
-                    );
+            const price =
+                document.createElement("strong");
 
+            price.textContent =
+                packageData.price
+                    ? `${packageData.price} جنيه`
+                    : "بدون سعر";
 
-                description.textContent =
-                    packageData.description || "";
 
+            info.appendChild(title);
+            info.appendChild(description);
+            info.appendChild(price);
 
-                const price =
-                    document.createElement(
-                        "strong"
-                    );
 
+            const actions =
+                document.createElement("div");
 
-                price.textContent =
-                    (packageData.price || "") +
-                    " جنيه";
+            actions.className =
+                "dashboard-package-actions";
 
 
-                info.appendChild(title);
-                info.appendChild(description);
-                info.appendChild(price);
+            const editButton =
+                document.createElement("button");
 
+            editButton.type =
+                "button";
 
-                const actions =
-                    document.createElement(
-                        "div"
-                    );
+            editButton.className =
+                "btn edit-package-btn";
 
+            editButton.textContent =
+                "تعديل";
 
-                actions.className =
-                    "dashboard-package-actions";
 
+            const deleteButton =
+                document.createElement("button");
 
-                const editButton =
-                    document.createElement(
-                        "button"
-                    );
+            deleteButton.type =
+                "button";
 
+            deleteButton.className =
+                "delete-package-btn";
 
-                editButton.type =
-                    "button";
+            deleteButton.textContent =
+                "حذف";
 
 
-                editButton.className =
-                    "btn edit-package-btn";
+            actions.appendChild(editButton);
+            actions.appendChild(deleteButton);
 
 
-                editButton.textContent =
-                    "تعديل";
+            card.appendChild(info);
+            card.appendChild(actions);
 
 
-                editButton.dataset.id =
-                    packageDocument.id;
+            dashboardPackages.appendChild(card);
 
 
-                const deleteButton =
-                    document.createElement(
-                        "button"
-                    );
+            editButton.addEventListener(
+                "click",
+                () => {
+                    editPackage(packageDocument.id);
+                }
+            );
 
 
-                deleteButton.type =
-                    "button";
+            deleteButton.addEventListener(
+                "click",
+                () => {
+                    deletePackage(packageDocument.id);
+                }
+            );
+
+        });
 
-
-                deleteButton.className =
-                    "delete-package-btn";
-
-
-                deleteButton.textContent =
-                    "حذف";
-
-
-                deleteButton.dataset.id =
-                    packageDocument.id;
-
-
-                actions.appendChild(
-                    editButton
-                );
-
-
-                actions.appendChild(
-                    deleteButton
-                );
-
-
-                card.appendChild(info);
-                card.appendChild(actions);
-
-
-                dashboardPackages.appendChild(
-                    card
-                );
-
-
-                // ==================================================
-                // EDIT
-                // ==================================================
-
-                editButton.addEventListener(
-                    "click",
-                    function () {
-
-                        editPackage(
-                            packageDocument.id
-                        );
-
-                    }
-                );
-
-
-                // ==================================================
-                // DELETE
-                // ==================================================
-
-                deleteButton.addEventListener(
-                    "click",
-                    function () {
-
-                        deletePackage(
-                            packageDocument.id
-                        );
-
-                    }
-                );
-
-            }
-        );
 
     } catch (error) {
 
@@ -986,7 +872,6 @@ async function loadDashboardPackages() {
         `;
 
     }
-
 }
 
 
@@ -1004,17 +889,10 @@ async function editPackage(id) {
     try {
 
         const packageRef =
-            doc(
-                db,
-                "packages",
-                id
-            );
-
+            doc(db, "packages", id);
 
         const packageSnap =
-            await getDoc(
-                packageRef
-            );
+            await getDoc(packageRef);
 
 
         if (!packageSnap.exists()) {
@@ -1024,175 +902,100 @@ async function editPackage(id) {
             );
 
             return;
-
         }
 
 
-        const packageData =
+        const data =
             packageSnap.data();
 
 
-        editingPackageId =
-            id;
+        editingPackageId = id;
 
-
-        // ==================================================
-        // NAME
-        // ==================================================
 
         const packageName =
-            document.querySelector(
-                "#packageName"
-            );
+            document.querySelector("#packageName");
+
+        const packagePrice =
+            document.querySelector("#packagePrice");
+
+        const packageImage =
+            document.querySelector("#packageImage");
+
+        const packageGallery =
+            document.querySelector("#packageGallery");
+
+        const packageDescription =
+            document.querySelector("#packageDescription");
+
+        const packageDetails =
+            document.querySelector("#packageDetails");
+
+        const packageProducts =
+            document.querySelector("#packageProducts");
 
 
         if (packageName) {
-
             packageName.value =
-                packageData.name || "";
-
+                data.name || "";
         }
-
-
-        // ==================================================
-        // PRICE
-        // ==================================================
-
-        const packagePrice =
-            document.querySelector(
-                "#packagePrice"
-            );
 
 
         if (packagePrice) {
-
             packagePrice.value =
-                packageData.price || "";
-
+                data.price || "";
         }
-
-
-        // ==================================================
-        // IMAGE
-        // ==================================================
-
-        const packageImage =
-            document.querySelector(
-                "#packageImage"
-            );
 
 
         if (packageImage) {
-
             packageImage.value =
-                packageData.image || "";
-
+                data.image || "";
         }
-
-
-        // ==================================================
-        // GALLERY
-        // ==================================================
-
-        const packageGallery =
-            document.querySelector(
-                "#packageGallery"
-            );
 
 
         if (packageGallery) {
 
             packageGallery.value =
-                Array.isArray(
-                    packageData.gallery
-                )
-                    ? packageData.gallery.join("\n")
+                Array.isArray(data.gallery)
+                    ? data.gallery.join("\n")
                     : "";
-
         }
-
-
-        // ==================================================
-        // DESCRIPTION
-        // ==================================================
-
-        const packageDescription =
-            document.querySelector(
-                "#packageDescription"
-            );
 
 
         if (packageDescription) {
-
             packageDescription.value =
-                packageData.description || "";
-
+                data.description || "";
         }
-
-
-        // ==================================================
-        // DETAILS
-        // ==================================================
-
-        const packageDetails =
-            document.querySelector(
-                "#packageDetails"
-            );
 
 
         if (packageDetails) {
-
             packageDetails.value =
-                packageData.details || "";
-
+                data.details || "";
         }
-
-
-        // ==================================================
-        // PRODUCTS
-        // ==================================================
-
-        const packageProducts =
-            document.querySelector(
-                "#packageProducts"
-            );
 
 
         if (packageProducts) {
 
             packageProducts.value =
-                Array.isArray(
-                    packageData.products
-                )
-                    ? packageData.products.join("\n")
+                Array.isArray(data.products)
+                    ? data.products.join("\n")
                     : "";
-
         }
 
 
-        // ==================================================
-        // MODAL
-        // ==================================================
-
         if (modalTitle) {
-
             modalTitle.textContent =
                 "تعديل الباكدج";
-
         }
 
 
         if (savePackageBtn) {
-
             savePackageBtn.textContent =
                 "حفظ التعديل";
-
         }
 
 
-        packageModal.classList.add(
-            "active"
-        );
+        packageModal.classList.add("active");
+
 
     } catch (error) {
 
@@ -1201,13 +1004,11 @@ async function editPackage(id) {
             error
         );
 
-
         alert(
             "حصل خطأ أثناء تحميل الباكدج."
         );
 
     }
-
 }
 
 
@@ -1217,13 +1018,13 @@ async function editPackage(id) {
 
 async function deletePackage(id) {
 
-    const confirmDelete =
+    const confirmed =
         confirm(
             "هل أنت متأكد من حذف هذه الباكدج؟"
         );
 
 
-    if (!confirmDelete) {
+    if (!confirmed) {
         return;
     }
 
@@ -1231,11 +1032,7 @@ async function deletePackage(id) {
     try {
 
         await deleteDoc(
-            doc(
-                db,
-                "packages",
-                id
-            )
+            doc(db, "packages", id)
         );
 
 
@@ -1245,8 +1042,8 @@ async function deletePackage(id) {
 
 
         await loadDashboardPackages();
-
         await loadStorePackages();
+
 
     } catch (error) {
 
@@ -1261,7 +1058,6 @@ async function deletePackage(id) {
         );
 
     }
-
 }
 
 
@@ -1273,106 +1069,77 @@ if (packageForm) {
 
     packageForm.addEventListener(
         "submit",
-        async function (event) {
+        async (event) => {
 
             event.preventDefault();
 
 
-            // ==================================================
-            // BASIC DATA
-            // ==================================================
-
             const name =
                 document.querySelector(
                     "#packageName"
-                ).value.trim();
+                )?.value
+                    .trim();
 
 
             const price =
                 document.querySelector(
                     "#packagePrice"
-                ).value.trim();
+                )?.value
+                    .trim();
 
 
             const description =
                 document.querySelector(
                     "#packageDescription"
-                ).value.trim();
+                )?.value
+                    .trim();
 
 
             const details =
                 document.querySelector(
                     "#packageDetails"
-                ).value.trim();
+                )?.value
+                    .trim();
 
-
-            // ==================================================
-            // IMAGE
-            // ==================================================
 
             const image =
                 document.querySelector(
                     "#packageImage"
-                ).value.trim();
+                )?.value
+                    .trim();
 
-
-            // ==================================================
-            // GALLERY
-            // ==================================================
 
             const galleryText =
                 document.querySelector(
                     "#packageGallery"
-                ).value.trim();
+                )?.value
+                    .trim();
+
+
+            const productsText =
+                document.querySelector(
+                    "#packageProducts"
+                )?.value
+                    .trim();
 
 
             const gallery =
                 galleryText
                     ? galleryText
-                        .split("\n")
-                        .map(
-                            function (url) {
-                                return url.trim();
-                            }
-                        )
-                        .filter(
-                            function (url) {
-                                return url !== "";
-                            }
-                        )
+                        .split(/\r?\n/)
+                        .map(url => url.trim())
+                        .filter(Boolean)
                     : [];
-
-
-            // ==================================================
-            // PRODUCTS
-            // ==================================================
-
-            const productsText =
-                document.querySelector(
-                    "#packageProducts"
-                ).value.trim();
 
 
             const products =
                 productsText
                     ? productsText
-                        .split("\n")
-                        .map(
-                            function (product) {
-                                return product.trim();
-                            }
-                        )
-                        .filter(
-                            function (product) {
-                                return product !== "";
-                            }
-                        )
+                        .split(/\r?\n/)
+                        .map(product => product.trim())
+                        .filter(Boolean)
                     : [];
 
-
-            // ==================================================
-            // VALIDATION
-            // ==================================================
 
             if (!name || !price) {
 
@@ -1381,16 +1148,25 @@ if (packageForm) {
                 );
 
                 return;
-
             }
+
+
+            const packageData = {
+
+                name,
+                price,
+                description,
+                details,
+                image,
+                gallery,
+                products
+
+            };
 
 
             try {
 
-                // ==================================================
                 // UPDATE
-                // ==================================================
-
                 if (editingPackageId) {
 
                     await updateDoc(
@@ -1399,15 +1175,7 @@ if (packageForm) {
                             "packages",
                             editingPackageId
                         ),
-                        {
-                            name: name,
-                            price: price,
-                            description: description,
-                            details: details,
-                            image: image,
-                            gallery: gallery,
-                            products: products
-                        }
+                        packageData
                     );
 
 
@@ -1417,26 +1185,13 @@ if (packageForm) {
 
                 }
 
-
-                // ==================================================
                 // ADD
-                // ==================================================
-
                 else {
 
                     await addDoc(
-                        collection(
-                            db,
-                            "packages"
-                        ),
+                        packagesCollection,
                         {
-                            name: name,
-                            price: price,
-                            description: description,
-                            details: details,
-                            image: image,
-                            gallery: gallery,
-                            products: products,
+                            ...packageData,
                             createdAt: serverTimestamp()
                         }
                     );
@@ -1449,24 +1204,20 @@ if (packageForm) {
                 }
 
 
-                // ==================================================
-                // RESET
-                // ==================================================
-
                 editingPackageId = null;
 
 
                 packageForm.reset();
 
 
-                packageModal.classList.remove(
-                    "active"
-                );
+                if (packageModal) {
+                    packageModal.classList.remove("active");
+                }
 
 
                 await loadDashboardPackages();
-
                 await loadStorePackages();
+
 
             } catch (error) {
 
@@ -1484,241 +1235,6 @@ if (packageForm) {
 
         }
     );
-
-}
-
-
-// ==================================================
-// LOAD PACKAGES IN STORE
-// ==================================================
-
-const packagesGrid =
-    document.querySelector(
-        ".packages-grid"
-    );
-
-
-async function loadStorePackages() {
-
-    if (!packagesGrid) {
-        return;
-    }
-
-
-    try {
-
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "packages"
-                )
-            );
-
-
-        packagesGrid.innerHTML = "";
-
-
-        if (snapshot.empty) {
-
-            packagesGrid.innerHTML = `
-                <p>
-                    لا توجد باكدجات حاليًا.
-                </p>
-            `;
-
-            return;
-
-        }
-
-
-        snapshot.forEach(
-            function (packageDocument) {
-
-                const packageData =
-                    packageDocument.data();
-
-
-                const card =
-                    document.createElement(
-                        "article"
-                    );
-
-
-                card.className =
-                    "package-card";
-
-
-                // ==================================================
-                // IMAGE
-                // ==================================================
-
-                const imageBox =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                imageBox.className =
-                    "package-image";
-
-
-                const image =
-                    document.createElement(
-                        "img"
-                    );
-
-
-                image.src =
-                    packageData.image ||
-                    "assets/images/package-1.jpg";
-
-
-                image.alt =
-                    packageData.name || "";
-
-
-                imageBox.appendChild(
-                    image
-                );
-
-
-                // ==================================================
-                // CONTENT
-                // ==================================================
-
-                const content =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                content.className =
-                    "package-content";
-
-
-                const title =
-                    document.createElement(
-                        "h3"
-                    );
-
-
-                title.textContent =
-                    packageData.name || "";
-
-
-                const description =
-                    document.createElement(
-                        "p"
-                    );
-
-
-                description.textContent =
-                    packageData.description || "";
-
-
-                // ==================================================
-                // BOTTOM
-                // ==================================================
-
-                const bottom =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                bottom.className =
-                    "package-bottom";
-
-
-                const price =
-                    document.createElement(
-                        "strong"
-                    );
-
-
-                price.textContent =
-                    (packageData.price || "") +
-                    " جنيه";
-
-
-                const detailsButton =
-                    document.createElement(
-                        "a"
-                    );
-
-
-                detailsButton.href =
-                    "product.html?id=" +
-                    packageDocument.id;
-
-
-                detailsButton.className =
-                    "btn";
-
-
-                detailsButton.textContent =
-                    "عرض التفاصيل";
-
-
-                bottom.appendChild(
-                    price
-                );
-
-
-                bottom.appendChild(
-                    detailsButton
-                );
-
-
-                content.appendChild(
-                    title
-                );
-
-
-                content.appendChild(
-                    description
-                );
-
-
-                content.appendChild(
-                    bottom
-                );
-
-
-                card.appendChild(
-                    imageBox
-                );
-
-
-                card.appendChild(
-                    content
-                );
-
-
-                packagesGrid.appendChild(
-                    card
-                );
-
-            }
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Store Error:",
-            error
-        );
-
-
-        packagesGrid.innerHTML = `
-            <p>
-                حصل خطأ أثناء تحميل الباكدجات.
-            </p>
-        `;
-
-    }
-
 }
 
 
@@ -1727,5 +1243,7 @@ async function loadStorePackages() {
 // ==================================================
 
 loadStorePackages();
+
+loadProduct();
 
 loadDashboardPackages();
