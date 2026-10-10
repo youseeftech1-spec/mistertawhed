@@ -433,7 +433,6 @@ button {
 ========================= */
 
 @media (max-width: 900px) {
-
     .nav {
         gap: 18px;
     }
@@ -449,7 +448,6 @@ button {
     .footer-content {
         grid-template-columns: repeat(2, 1fr);
     }
-
 }
 
 
@@ -458,7 +456,6 @@ button {
 ========================= */
 
 @media (max-width: 650px) {
-
     .header .container {
         min-height: 65px;
     }
@@ -470,7 +467,6 @@ button {
     .menu-btn {
         display: block;
     }
-
 
     .hero {
         padding: 55px 0;
@@ -495,7 +491,6 @@ button {
         height: 280px;
     }
 
-
     .packages {
         padding: 65px 0;
     }
@@ -504,11 +499,9 @@ button {
         grid-template-columns: 1fr;
     }
 
-
     .package-image {
         height: 250px;
     }
-
 
     .package-bottom {
         flex-direction: column;
@@ -519,12 +512,24 @@ button {
         width: 100%;
     }
 
-
     .footer-content {
         grid-template-columns: 1fr;
         gap: 30px;
     }
 
+    .nav.active {
+        display: flex;
+        position: absolute;
+        top: 65px;
+        right: 0;
+        width: 100%;
+        background-color: #111111;
+        padding: 20px;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    }
 }
 
 
@@ -533,7 +538,6 @@ button {
 ========================= */
 
 @media (max-width: 400px) {
-
     .container {
         width: 90%;
     }
@@ -553,25 +557,9 @@ button {
     .logo-text strong {
         font-size: 16px;
     }
-
 }
-@media (max-width: 650px) {
 
-    .nav.active {
-        display: flex;
-        position: absolute;
-        top: 65px;
-        right: 0;
-        width: 100%;
-        background-color: #111111;
-        padding: 20px;
-        flex-direction: column;
-        align-items: center;
-        gap: 18px;
-        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-    }
 
-}
 /* =========================
    PRODUCT DETAILS
 ========================= */
@@ -590,13 +578,20 @@ button {
 }
 
 
-/* صورة الباكدج */
+/* صور الباكدج */
+
+.product-images {
+    width: 100%;
+    max-width: 550px;
+}
 
 .product-image {
+    width: 100%;
     height: 500px;
+    aspect-ratio: 1 / 1;
     background-color: #181818;
     border: 1px solid rgba(212, 175, 55, 0.25);
-    border-radius: 10px;
+    border-radius: 16px;
     overflow: hidden;
 }
 
@@ -604,6 +599,7 @@ button {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 
@@ -674,11 +670,37 @@ button {
 
 
 /* =========================
+   GALLERY
+========================= */
+
+.product-gallery {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.product-gallery img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: block;
+}
+
+.product-gallery img:hover {
+    border-color: #007e60;
+}
+
+
+/* =========================
    PRODUCT RESPONSIVE
 ========================= */
 
 @media (max-width: 700px) {
-
     .product-details {
         padding: 55px 0;
     }
@@ -707,8 +729,9 @@ button {
     .order-btn {
         width: 100%;
     }
+}
 
-}   
+
 /* =========================
    ORDER PAGE
 ========================= */
@@ -864,7 +887,6 @@ button {
 ========================= */
 
 @media (max-width: 750px) {
-
     .order-section {
         padding: 55px 0;
     }
@@ -886,8 +908,9 @@ button {
     .summary-image {
         height: 250px;
     }
-
 }
+
+
 /* =========================
    DASHBOARD
 ========================= */
@@ -1072,7 +1095,6 @@ button {
 ========================= */
 
 @media (max-width: 750px) {
-
     .dashboard {
         padding: 55px 0;
     }
@@ -1106,65 +1128,14 @@ button {
     .dashboard-modal-content {
         padding: 22px;
     }
-
-}
-/* =========================
-   PRODUCT IMAGES
-========================= */
-
-.product-images {
-    width: 100%;
-    max-width: 550px;
-}
-
-.product-image {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    border-radius: 16px;
-}
-
-.product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
 }
 
 
 /* =========================
-   GALLERY
-========================= */
-
-.product-gallery {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin-top: 12px;
-}
-
-.product-gallery img {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    height: auto;
-    object-fit: cover;
-    border-radius: 10px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    display: block;
-}
-
-.product-gallery img:hover {
-    border-color: #007e60;
-}
-
-
-/* =========================
-   MOBILE
+   GALLERY RESPONSIVE
 ========================= */
 
 @media (max-width: 768px) {
-
     .product-images {
         max-width: 100%;
     }
@@ -1173,5 +1144,5 @@ button {
         grid-template-columns: repeat(4, 1fr);
         gap: 8px;
     }
-
 }
+
